@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a2e1a">
+<title>Forest Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1f0f;
+    --bg2: #162316;
+    --bg3: #1e301e;
+    --card: #1a2e1a;
+    --border: #2d442d;
+    --accent: #7ab648;
+    --accent2: #4a8f2a;
+    --gold: #c8a84b;
+    --text: #d4e8c2;
+    --text2: #8aab72;
+    --text3: #546f45;
+    --danger: #c04a4a;
+    --radius: 10px;
+    --font-head: 'Playfair Display', Georgia, serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-mono); font-size: 14px; overflow: hidden; }
+
+  /* LAYOUT */
+  #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+  #header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0; min-height: 52px; }
+  #header h1 { font-family: var(--font-head); font-size: 18px; color: var(--accent); flex: 1; }
+  #header .back-btn { background: none; border: none; color: var(--text2); font-size: 18px; cursor: pointer; padding: 4px 8px; }
+  #header .header-action { background: var(--accent2); border: none; color: var(--text); font-family: var(--font-mono); font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+  #content { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+  #nav { background: var(--bg2); border-top: 1px solid var(--border); display: flex; flex-shrink: 0; }
+  #nav button { flex: 1; background: none; border: none; color: var(--text3); font-family: var(--font-mono); font-size: 10px; padding: 10px 4px 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: color 0.2s; }
+  #nav button.active { color: var(--accent); }
+  #nav button svg { width: 20px; height: 20px; }
+
+  /* CARDS & LISTS */
+  .section { padding: 16px; }
+  .section-title { font-family: var(--font-head); font-size: 16px; color: var(--accent); margin-bottom: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.2s; }
+  .card:active { border-color: var(--accent); }
+  .card-title { font-size: 14px; color: var(--text); margin-bottom: 4px; }
+  .card-sub { font-size: 11px; color: var(--text3); }
+  .card-meta { font-size: 11px; color: var(--text2); margin-top: 6px; }
+  .add-btn { width: 100%; background: transparent; border: 1px dashed var(--border); border-radius: var(--radius); color: var(--text3); font-family: var(--font-mono); font-size: 13px; padding: 12px; cursor: pointer; transition: all 0.2s; margin-top: 4px; }
+  .add-btn:active { border-color: var(--accent); color: var(--accent); }
+
+  /* FORMS */
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; display: block; }
+  .form-input, .form-select, .form-textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--font-mono); font-size: 13px; padding: 9px 11px; outline: none; transition: border-color 0.2s; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent2); }
+  .form-textarea { resize: vertical; min-height: 70px; }
+  .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238aab72' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+  .form-select option { background: var(--bg3); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn { border: none; border-radius: 6px; font-family: var(--font-mono); font-size: 13px; padding: 10px 16px; cursor: pointer; transition: opacity 0.2s; }
+  .btn:active { opacity: 0.8; }
+  .btn-primary { background: var(--accent2); color: var(--text); }
+  .btn-secondary { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-row { display: flex; gap: 8px; margin-top: 16px; }
+  .btn-row .btn { flex: 1; }
+
+  /* TAGS */
+  .tag { display: inline-block; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; font-size: 10px; color: var(--text2); padding: 2px 7px; margin: 2px; }
+  .tag-accent { border-color: var(--accent2); color: var(--accent); }
+  .tag-gold { border-color: var(--gold); color: var(--gold); }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .tab { flex: 1; background: none; border: none; color: var(--text3); font-family: var(--font-mono); font-size: 12px; padding: 10px 4px; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* TABLE */
+  .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 500px; }
+  th { background: var(--bg3); color: var(--text3); text-align: left; padding: 8px 10px; font-weight: 400; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); position: sticky; top: 0; }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+  tr:active td { background: var(--bg3); }
+  .tbl-actions { display: flex; gap: 6px; }
+  .tbl-btn { background: none; border: 1px solid var(--border); border-radius: 4px; color: var(--text2); font-size: 11px; padding: 3px 8px; cursor: pointer; font-family: var(--font-mono); }
+  .tbl-btn:active { background: var(--bg3); }
+
+  /* FILTER BAR */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+  .filter-bar .form-input { flex: 1; }
+  .filter-chip { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; color: var(--text3); font-size: 11px; padding: 5px 12px; cursor: pointer; white-space: nowrap; font-family: var(--font-mono); }
+  .filter-chip.active { background: var(--accent2); border-color: var(--accent2); color: var(--text); }
+  .filter-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 10px; }
+  .filter-scroll::-webkit-scrollbar { display: none; }
+
+  /* MAP CANVAS */
+  #map-canvas { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); display: block; touch-action: none; cursor: crosshair; width: 100%; }
+  .map-toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .tool-btn { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; color: var(--text2); font-family: var(--font-mono); font-size: 11px; padding: 7px 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .tool-btn.active { background: var(--accent2); border-color: var(--accent2); color: var(--text); }
+  .tool-btn:active { opacity: 0.8; }
+
+  /* CALENDAR */
+  .cal-month { margin-bottom: 20px; }
+  .cal-month-title { font-family: var(--font-head); font-size: 15px; color: var(--gold); margin-bottom: 8px; padding: 0 2px; }
+  .cal-item { background: var(--card); border-left: 3px solid var(--accent2); border-radius: 0 6px 6px 0; padding: 8px 12px; margin-bottom: 6px; }
+  .cal-item-plant { font-size: 13px; color: var(--text); }
+  .cal-item-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .cal-empty { color: var(--text3); font-size: 12px; font-style: italic; padding: 8px 2px; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; display: flex; align-items: flex-end; }
+  .modal { background: var(--bg2); border-radius: 16px 16px 0 0; border-top: 1px solid var(--border); padding: 20px 16px 32px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-title { font-family: var(--font-head); font-size: 17px; color: var(--accent); margin-bottom: 16px; }
+  .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+
+  /* SPECIES PICKER */
+  .species-pick-list { max-height: 50vh; overflow-y: auto; }
+  .species-pick-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .species-pick-item input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; flex-shrink: 0; }
+  .species-pick-name { font-size: 13px; color: var(--text); }
+  .species-pick-meta { font-size: 11px; color: var(--text3); }
+
+  /* MISC */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 13px; }
+  .empty-state .icon { font-size: 36px; margin-bottom: 10px; }
+  .badge { background: var(--accent2); color: var(--text); border-radius: 10px; font-size: 10px; padding: 1px 7px; }
+  .inline-edit { background: none; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-family: var(--font-mono); font-size: 13px; width: 100%; outline: none; padding: 2px 0; }
+  .detail-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .detail-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+  .detail-value { font-size: 13px; color: var(--text); text-align: right; max-width: 60%; }
+  .hidden { display: none !important; }
+  .scroll-chips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; }
+  .scroll-chips::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <button id="back-btn" class="back-btn hidden">←</button>
+    <h1 id="header-title">Forest Tool</h1>
+    <button id="header-action-btn" class="header-action hidden"></button>
+  </div>
+  <div id="content"></div>
+  <nav id="nav">
+    <button data-view="sites" class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Sites
+    </button>
+    <button data-view="library">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2z"/><path d="M12 6v6l4 2"/></svg>
+      Library
+    </button>
+    <button data-view="calendar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Calendar
+    </button>
+    <button data-view="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      Settings
+    </button>
+  </nav>
+</div>
+
+<script>
+// ===================== DATA LAYER =====================
+const DB = {
+  get(k) { try { return JSON.parse(localStorage.getItem('ff_'+k)) || null; } catch { return null; } },
+  set(k, v) { localStorage.setItem('ff_'+k, JSON.stringify(v)); },
+  sites() { return this.get('sites') || []; },
+  saveSites(d) { this.set('sites', d); },
+  species() { return this.get('species') || defaultSpecies(); },
+  saveSpecies(d) { this.set('species', d); },
+  settings() { return this.get('settings') || defaultSettings(); },
+  saveSettings(d) { this.set('settings', d); },
+};
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+function defaultSettings() {
+  return {
+    rowWidth: 1.2,
+    rowSpacing: 4,
+    nestDiameter: 3,
+    nestSpacing: 3,
+    climatePresets: [
+      { id: 'asturias-coastal', name: 'Asturias — Coastal', winterLow: 2, summerHigh: 26, rainfall: 1100, rainfallPattern: 'year-round', lastFrost: 'Feb' },
+      { id: 'asturias-inland', name: 'Asturias — Inland', winterLow: -5, summerHigh: 30, rainfall: 900, rainfallPattern: 'year-round', lastFrost: 'Apr' },
+      { id: 'asturias-upland', name: 'Asturias — Upland', winterLow: -10, summerHigh: 24, rainfall: 1400, rainfallPattern: 'year-round', lastFrost: 'May' },
+      { id: 'temperate-oceanic', name: 'Temperate Oceanic', winterLow: 0, summerHigh: 24, rainfall: 900, rainfallPattern: 'year-round', lastFrost: 'Mar' },
+      { id: 'temperate-continental', name: 'Temperate Continental', winterLow: -15, summerHigh: 32, rainfall: 650, rainfallPattern: 'spring-summer', lastFrost: 'May' },
+      { id: 'custom', name: 'Custom', winterLow: 0, summerHigh: 25, rainfall: 800, rainfallPattern: 'year-round', lastFrost: 'Mar' },
+    ]
+  };
+}
+
+function defaultSpecies() {
+  return [
+    { id: uid(), strata:'Emergent', name:'Japanese Raisin Tree', botanical:'Hovenia dulcis', succession:'Transitionary / Accumulation', lifecycle:'Climax', spacing:4, fruiting:'Mid-winter', pruning:'Pollard', propagation:'Seed', notes:'Good timber', winterLow:-15, summerLow:10 },
+    { id: uid(), strata:'Emergent', name:'Black Locust', botanical:'Robinia pseudoacacia', succession:'Accumulation', lifecycle:'Climax', spacing:4, fruiting:'', pruning:'Pollard, coppice', propagation:'Seed', notes:'Nitrogen fixer, thorny', winterLow:-30, summerLow:10 },
+    { id: uid(), strata:'Emergent', name:'Honey Locust', botanical:'Gleditsia triacanthos', succession:'Transitionary', lifecycle:'Climax', spacing:4, fruiting:'Pods drop all winter', pruning:'Light', propagation:'Seed', notes:'Fodder, not a nitrogen fixer', winterLow:-30, summerLow:10 },
+    { id: uid(), strata:'Emergent', name:'Alder', botanical:'Alnus sp.', succession:'Transitionary / Accumulation', lifecycle:'Climax', spacing:2, fruiting:'', pruning:'Staghorn yearly', propagation:'Seed', notes:'Nitrogen fixer', winterLow:-30, summerLow:5 },
+    { id: uid(), strata:'Emergent', name:'Pecan', botanical:'Carya illinoinensis', succession:'Abundance', lifecycle:'Climax', spacing:6, fruiting:'Early winter', pruning:'Staghorn possible', propagation:'Seed, graft', notes:'Produces nuts, long-lived', winterLow:-15, summerLow:20 },
+    { id: uid(), strata:'Emergent', name:'Chestnut', botanical:'Castanea sp.', succession:'Abundance', lifecycle:'Climax', spacing:6, fruiting:'Nut autumn', pruning:'Coppice', propagation:'Seed and graft', notes:'Carbohydrates and timber', winterLow:-20, summerLow:15 },
+    { id: uid(), strata:'Emergent', name:'Walnut', botanical:'Juglans regia', succession:'Abundance', lifecycle:'Climax', spacing:8, fruiting:'Nut autumn', pruning:'Prune deadwood', propagation:'Seed and graft', notes:'Valuable timber', winterLow:-25, summerLow:15 },
+    { id: uid(), strata:'High', name:'Poplar', botanical:'Populus sp.', succession:'Transitionary / Accumulation', lifecycle:'Secondary', spacing:2, fruiting:'', pruning:'Pollard', propagation:'Stick', notes:'Deciduous', winterLow:-30, summerLow:5 },
+    { id: uid(), strata:'High', name:'Willow', botanical:'Salix sp.', succession:'Transitionary / Accumulation', lifecycle:'Secondary', spacing:2, fruiting:'', pruning:'Pollard / Coppice', propagation:'Stick', notes:'Deciduous', winterLow:-30, summerLow:5 },
+    { id: uid(), strata:'High', name:'Pear', botanical:'Pyrus sp.', succession:'Abundance', lifecycle:'Climax', spacing:5, fruiting:'Summer/Autumn', pruning:'Winter pruning', propagation:'Graft', notes:'Deciduous', winterLow:-25, summerLow:10 },
+    { id: uid(), strata:'High', name:'Apple', botanical:'Malus sp.', succession:'Abundance', lifecycle:'Climax', spacing:5, fruiting:'Summer/Autumn', pruning:'Winter pruning', propagation:'Graft', notes:'Deciduous', winterLow:-30, summerLow:10 },
+    { id: uid(), strata:'High', name:'Asparagus', botanical:'Asparagus officinalis', succession:'Abundance', lifecycle:'Secondary', spacing:0.2, fruiting:'Spears early Spring', pruning:'Coppice dead stalks in winter', propagation:'Crown and seed', notes:'Deciduous', winterLow:-20, summerLow:5 },
+    { id: uid(), strata:'High', name:'Grape', botanical:'Vitis sp.', succession:'Transitionary / Abundance', lifecycle:'Secondary', spacing:2, fruiting:'Summer/Autumn', pruning:'Prune in winter if needed', propagation:'Cutting', notes:'Climber, deciduous', winterLow:-20, summerLow:15 },
+    { id: uid(), strata:'High', name:'Date Plum', botanical:'Diospyros lotus', succession:'Transitionary / Abundance', lifecycle:'Secondary', spacing:5, fruiting:'Autumn', pruning:'Self pruning', propagation:'Seed', notes:'Deciduous', winterLow:-20, summerLow:15 },
+    { id: uid(), strata:'High', name:'Plum', botanical:'Prunus domestica', succession:'Abundance', lifecycle:'Climax', spacing:5, fruiting:'Summer', pruning:'Winter pruning', propagation:'Seed + graft', notes:'Fresh eating and preserves', winterLow:-25, summerLow:10 },
+    { id: uid(), strata:'High', name:'Cherry', botanical:'Prunus avium', succession:'Abundance', lifecycle:'Climax', spacing:6, fruiting:'Summer', pruning:'Winter pruning', propagation:'Seed + graft', notes:'Fresh eating and canning', winterLow:-25, summerLow:10 },
+    { id: uid(), strata:'High', name:'Peach', botanical:'Prunus persica', succession:'Abundance', lifecycle:'Climax', spacing:5, fruiting:'Summer', pruning:'Winter pruning', propagation:'Seed + graft', notes:'High in vitamins A and C', winterLow:-15, summerLow:18 },
+    { id: uid(), strata:'Medium', name:'Hazelnuts', botanical:'Corylus sp.', succession:'Abundance', lifecycle:'Climax', spacing:4, fruiting:'Autumn', pruning:'Coppice every 2–3 yrs', propagation:'Seed, grafted', notes:'Deciduous', winterLow:-25, summerLow:8 },
+    { id: uid(), strata:'Medium', name:'Jerusalem Artichokes', botanical:'Helianthus tuberosus', succession:'Accumulation', lifecycle:'Placenta', spacing:0.5, fruiting:'Tubers winter', pruning:'After dieback', propagation:'Tuber', notes:'Winter dormant', winterLow:-25, summerLow:5 },
+    { id: uid(), strata:'Medium', name:'Yacon', botanical:'Smallanthus sonchifolia', succession:'Transitionary', lifecycle:'Placenta', spacing:0.5, fruiting:'Tubers winter', pruning:'After dieback', propagation:'Crown', notes:'Late winter dormant', winterLow:-5, summerLow:15 },
+    { id: uid(), strata:'Medium', name:'Elderberries', botanical:'Sambucus sp.', succession:'Accumulation / Abundance', lifecycle:'Secondary', spacing:3, fruiting:'Summer/Autumn', pruning:'High prunability', propagation:'Stake', notes:'Deciduous', winterLow:-25, summerLow:5 },
+    { id: uid(), strata:'Medium', name:'Blueberries', botanical:'Cyanococcus', succession:'Abundance', lifecycle:'Climax', spacing:2, fruiting:'Summer', pruning:'Prune in winter if needed', propagation:'Cuttings', notes:'High in antioxidants', winterLow:-25, summerLow:10 },
+    { id: uid(), strata:'Medium', name:'Raspberry', botanical:'Rubus idaeus', succession:'Transitionary', lifecycle:'Placenta', spacing:1, fruiting:'Summer', pruning:'Winter pruning', propagation:'Canes and root suckers', notes:'High in fiber and vitamins', winterLow:-25, summerLow:5 },
+    { id: uid(), strata:'Medium', name:'Currant', botanical:'Ribes rubrum', succession:'Transitionary', lifecycle:'Placenta', spacing:1, fruiting:'Summer', pruning:'Winter pruning', propagation:'Cuttings', notes:'High in vitamin C', winterLow:-25, summerLow:5 },
+    { id: uid(), strata:'Low', name:'American Paw Paw', botanical:'Asimina triloba', succession:'Abundance', lifecycle:'Climax', spacing:2, fruiting:'Autumn', pruning:'Plant as a thicket', propagation:'Seed', notes:'Deer resistant, great fruit', winterLow:-20, summerLow:15 },
+    { id: uid(), strata:'Low', name:'Comfrey', botanical:'Symphytum officinale', succession:'Abundance', lifecycle:'Placenta', spacing:0.2, fruiting:'', pruning:'Coppice before flowering', propagation:'Crown', notes:'Winter dormant', winterLow:-25, summerLow:5 },
+    { id: uid(), strata:'Low', name:'Nasturtium', botanical:'Tropaeolum majus', succession:'Accumulation', lifecycle:'Placenta', spacing:0.2, fruiting:'Fodder', pruning:'Cut back once stalks go yellowish', propagation:'Seed, cutting', notes:'Great pollinators', winterLow:0, summerLow:10 },
+    { id: uid(), strata:'Low', name:'Cocksfoot', botanical:'Dactylis glomerata', succession:'Transitionary', lifecycle:'Climax', spacing:0.1, fruiting:'Good fodder grass', pruning:'Frequent cutting', propagation:'Seed, crown', notes:'High winter growth', winterLow:-25, summerLow:5 },
+    { id: uid(), strata:'Low', name:'Borage', botanical:'Borago officinalis', succession:'Abundance', lifecycle:'Placenta', spacing:0.2, fruiting:'Herbal', pruning:'Cut back after flowering', propagation:'Seed, crown', notes:'Great pollinators', winterLow:-5, summerLow:10 },
+    { id: uid(), strata:'Low', name:'Strawberry', botanical:'Fragaria × ananassa', succession:'Abundance', lifecycle:'Placenta', spacing:0.3, fruiting:'Summer', pruning:'Remove runners', propagation:'Runners', notes:'Rich in antioxidants', winterLow:-20, summerLow:8 },
+    { id: uid(), strata:'Low', name:'Rhubarb', botanical:'Rheum rhabarbarum', succession:'Transitionary', lifecycle:'Secondary', spacing:1, fruiting:'Spring', pruning:'Remove flower stalks', propagation:'Division', notes:'High in vitamin K', winterLow:-25, summerLow:5 },
+    { id: uid(), strata:'Low', name:'Sorrel', botanical:'Rumex acetosa', succession:'Accumulation', lifecycle:'Placenta', spacing:0.3, fruiting:'Spring to fall', pruning:'Cut back to rejuvenate', propagation:'Seed, division', notes:'Rich in vitamin C', winterLow:-25, summerLow:5 },
+  ];
+}
+
+// Pruning calendar mapping
+const PRUNE_MONTHS = {
+  'Winter pruning': [12,1,2], 'Pollard': [1,2], 'Coppice': [1,2,3],
+  'Coppice every 2–3 yrs': [1,2], 'Staghorn yearly': [1,2],
+  'Prune in winter if needed': [12,1,2], 'High prunability': [3,4,9,10],
+  'Remove runners': [8,9], 'Cut back after flowering': [7,8],
+  'Coppice before flowering': [4,5,6], 'Frequent cutting': [4,5,6,7,8,9],
+  'Remove flower stalks': [4,5], 'After dieback': [11,12],
+  'Coppice dead stalks in winter': [11,12,1], 'Cut back to rejuvenate': [4,5],
+  'Pollard / Coppice': [1,2,3], 'Prune deadwood': [1,2],
+  'Light': [1,2], 'Plant as a thicket': [], 'Self pruning': [],
+  'Staghorn possible': [1,2], 'Cut back once stalks go yellowish': [9,10],
+};
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ===================== STATE =====================
+let state = {
+  view: 'sites',
+  subView: null,
+  currentSite: null,
+  currentRow: null,
+  currentNest: null,
+  currentSpecies: null,
+  modal: null,
+  filterStrata: 'all',
+  filterSuccession: 'all',
+  searchQuery: '',
+  mapTool: 'none',
+  mapImage: null,
+  mapElements: [],
+  drawingPoints: null,
+};
+
+// ===================== ROUTER =====================
+function navigate(view, sub=null, data=null) {
+  state.view = view;
+  state.subView = sub;
+  if (data) Object.assign(state, data);
+  render();
+}
+
+// ===================== RENDER =====================
+function render() {
+  const content = document.getElementById('content');
+  const nav = document.getElementById('nav');
+  const headerTitle = document.getElementById('header-title');
+  const backBtn = document.getElementById('back-btn');
+  const actionBtn = document.getElementById('header-action-btn');
+
+  nav.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.view === state.view));
+
+  backBtn.classList.add('hidden');
+  actionBtn.classList.add('hidden');
+
+  if (state.view === 'sites') {
+    if (!state.subView) {
+      headerTitle.textContent = 'Sites';
+      actionBtn.textContent = '+ New Site';
+      actionBtn.classList.remove('hidden');
+      actionBtn.onclick = () => showModal('new-site');
+      content.innerHTML = renderSitesList();
+    } else if (state.subView === 'site') {
+      const site = DB.sites().find(s => s.id === state.currentSite);
+      headerTitle.textContent = site ? site.name : 'Site';
+      backBtn.classList.remove('hidden');
+      backBtn.onclick = () => navigate('sites');
+      actionBtn.textContent = 'Edit';
+      actionBtn.classList.remove('hidden');
+      actionBtn.onclick = () => showModal('edit-site', state.currentSite);
+      content.innerHTML = renderSiteDetail(site);
+    } else if (state.subView === 'row') {
+      const site = DB.sites().find(s => s.id === state.currentSite);
+      const row = (site.rows||[]).find(r => r.id === state.currentRow);
+      headerTitle.textContent = row ? row.name : 'Row';
+      backBtn.classList.remove('hidden');
+      backBtn.onclick = () => navigate('sites', 'site', {currentSite: state.currentSite});
+      content.innerHTML = renderRowDetail(site, row);
+    } else if (state.subView === 'nest') {
+      const site = DB.sites().find(s => s.id === state.currentSite);
+      const nest = (site.nests||[]).find(n => n.id === state.currentNest);
+      headerTitle.textContent = nest ? nest.name : 'Nest';
+      backBtn.classList.remove('hidden');
+      backBtn.onclick = () => navigate('sites', 'site', {currentSite: state.currentSite});
+      content.innerHTML = renderNestDetail(site, nest);
+    }
+  } else if (state.view === 'library') {
+    headerTitle.textContent = 'Species Library';
+    actionBtn.textContent = '+ Add';
+    actionBtn.classList.remove('hidden');
+    actionBtn.onclick = () => showModal('new-species');
+    content.innerHTML = renderLibrary();
+  } else if (state.view === 'calendar') {
+    headerTitle.textContent = 'Pruning Calendar';
+    content.innerHTML = renderCalendar();
+  } else if (state.view === 'settings') {
+    headerTitle.textContent = 'Settings';
+    content.innerHTML = renderSettings();
+  }
+
+  attachHandlers();
+}
+
+// ===================== VIEWS =====================
+function renderSitesList() {
+  const sites = DB.sites();
+  if (!sites.length) return `<div class="empty-state"><div class="icon">🌱</div>No sites yet.<br>Tap + New Site to begin.</div>`;
+  return `<div class="section">${sites.map(s => `
+    <div class="card" onclick="openSite('${s.id}')">
+      <div class="card-title">${s.name}</div>
+      <div class="card-sub">${s.location || '—'}</div>
+      <div class="card-meta">
+        <span class="tag">${s.climateName || 'No climate'}</span>
+        <span class="tag">${(s.rows||[]).length} rows</span>
+        <span class="tag">${(s.nests||[]).length} nests</span>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function renderSiteDetail(site) {
+  if (!site) return '<div class="empty-state">Site not found.</div>';
+  const rows = site.rows || [];
+  const nests = site.nests || [];
+
+  return `
+  <div class="section">
+    <div class="tabs">
+      <button class="tab active" onclick="showSiteTab(this,'info')">Info</button>
+      <button class="tab" onclick="showSiteTab(this,'map')">Map</button>
+      <button class="tab" onclick="showSiteTab(this,'rows')">Rows</button>
+      <button class="tab" onclick="showSiteTab(this,'nests')">Nests</button>
+    </div>
+
+    <div id="tab-info">
+      ${siteInfoRows(site)}
+    </div>
+
+    <div id="tab-map" class="hidden">
+      <div class="map-toolbar">
+        <button class="tool-btn ${state.mapTool==='row'?'active':''}" onclick="setMapTool('row')">✏️ Row</button>
+        <button class="tool-btn ${state.mapTool==='nest'?'active':''}" onclick="setMapTool('nest')">⭕ Nest</button>
+        <button class="tool-btn ${state.mapTool==='none'?'active':''}" onclick="setMapTool('none')">👆 Select</button>
+        <label class="tool-btn" style="cursor:pointer">📷 Photo<input type="file" accept="image/*" style="display:none" onchange="loadMapImage(event,'${site.id}')"></label>
+        <button class="tool-btn" onclick="clearMapElements('${site.id}')">🗑 Clear</button>
+      </div>
+      <canvas id="map-canvas" height="320"></canvas>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">Tap to place points. Double-tap to finish a row.</div>
+    </div>
+
+    <div id="tab-rows" class="hidden">
+      ${rows.map(r => `
+        <div class="card" onclick="openRow('${site.id}','${r.id}')">
+          <div class="card-title">${r.name}</div>
+          <div class="card-sub">${r.length ? r.length+'m' : 'No length set'} · ${(r.species||[]).length} species</div>
+          ${r.notes ? `<div class="card-meta">${r.notes}</div>` : ''}
+        </div>`).join('')}
+      <button class="add-btn" onclick="showModal('new-row','${site.id}')">+ Add Row / Line</button>
+    </div>
+
+    <div id="tab-nests" class="hidden">
+      ${nests.map(n => `
+        <div class="card" onclick="openNest('${site.id}','${n.id}')">
+          <div class="card-title">${n.name}</div>
+          <div class="card-sub">${(n.species||[]).length} species</div>
+          ${n.notes ? `<div class="card-meta">${n.notes}</div>` : ''}
+        </div>`).join('')}
+      <button class="add-btn" onclick="showModal('new-nest','${site.id}')">+ Add Nest</button>
+    </div>
+  </div>`;
+}
+
+function siteInfoRows(site) {
+  return `
+    <div class="detail-row"><span class="detail-label">Location</span><span class="detail-value">${site.location||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Climate</span><span class="detail-value">${site.climateName||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Winter Low</span><span class="detail-value">${site.winterLow!==undefined?site.winterLow+'°C':'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Summer High</span><span class="detail-value">${site.summerHigh!==undefined?site.summerHigh+'°C':'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Rainfall</span><span class="detail-value">${site.rainfall?site.rainfall+'mm/yr':'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Last Frost</span><span class="detail-value">${site.lastFrost||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Plot Size</span><span class="detail-value">${site.plotSize||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Start Date</span><span class="detail-value">${site.startDate||'—'}</span></div>
+    ${site.notes ? `<div style="margin-top:12px;font-size:12px;color:var(--text2)">${site.notes}</div>` : ''}
+  `;
+}
+
+function renderRowDetail(site, row) {
+  if (!row) return '<div class="empty-state">Row not found.</div>';
+  const species = DB.species();
+  const rowSpecies = (row.species||[]).map(id => species.find(s => s.id===id)).filter(Boolean);
+  return `<div class="section">
+    <div class="detail-row"><span class="detail-label">Length</span><span class="detail-value">${row.length?row.length+'m':'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${row.type||'—'}</span></div>
+    ${row.notes?`<div style="margin:12px 0;font-size:12px;color:var(--text2)">${row.notes}</div>`:''}
+    <hr class="divider">
+    <div class="section-title">Species in this row</div>
+    ${rowSpecies.map(sp => speciesCard(sp)).join('')}
+    <button class="add-btn" onclick="showModal('pick-species','row','${row.id}','${site.id}')">+ Add Species</button>
+    <hr class="divider">
+    <button class="btn btn-secondary" style="width:100%;margin-top:4px" onclick="showModal('edit-row','${site.id}','${row.id}')">Edit Row</button>
+    <button class="btn btn-danger" style="width:100%;margin-top:8px" onclick="deleteRow('${site.id}','${row.id}')">Delete Row</button>
+  </div>`;
+}
+
+function renderNestDetail(site, nest) {
+  if (!nest) return '<div class="empty-state">Nest not found.</div>';
+  const species = DB.species();
+  const nestSpecies = (nest.species||[]).map(id => species.find(s => s.id===id)).filter(Boolean);
+  return `<div class="section">
+    <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${nest.type||'—'}</span></div>
+    ${nest.notes?`<div style="margin:12px 0;font-size:12px;color:var(--text2)">${nest.notes}</div>`:''}
+    <hr class="divider">
+    <div class="section-title">Species in this nest</div>
+    ${nestSpecies.map(sp => speciesCard(sp)).join('')}
+    <button class="add-btn" onclick="showModal('pick-species','nest','${nest.id}','${site.id}')">+ Add Species</button>
+    <hr class="divider">
+    <button class="btn btn-secondary" style="width:100%;margin-top:4px" onclick="showModal('edit-nest','${site.id}','${nest.id}')">Edit Nest</button>
+    <button class="btn btn-danger" style="width:100%;margin-top:8px" onclick="deleteNest('${site.id}','${nest.id}')">Delete Nest</button>
+  </div>`;
+}
+
+function speciesCard(sp) {
+  return `<div class="card" onclick="showModal('species-detail','${sp.id}')">
+    <div class="card-title">${sp.name}</div>
+    <div class="card-sub" style="font-style:italic">${sp.botanical}</div>
+    <div style="margin-top:6px">
+      <span class="tag tag-accent">${sp.strata}</span>
+      <span class="tag">${sp.succession}</span>
+      <span class="tag tag-gold">${sp.lifecycle}</span>
+    </div>
+  </div>`;
+}
+
+function renderLibrary() {
+  let species = DB.species();
+  const q = state.searchQuery.toLowerCase();
+  if (q) species = species.filter(s => s.name.toLowerCase().includes(q) || s.botanical.toLowerCase().includes(q));
+  if (state.filterStrata !== 'all') species = species.filter(s => s.strata === state.filterStrata);
+  if (state.filterSuccession !== 'all') species = species.filter(s => s.succession.includes(state.filterSuccession));
+
+  const strata = ['all','Emergent','High','Medium','Low'];
+  const successions = ['all','Accumulation','Transitionary','Abundance'];
+
+  return `<div class="section">
+    <input class="form-input" placeholder="Search species..." value="${state.searchQuery}" oninput="state.searchQuery=this.value;render()" style="margin-bottom:8px">
+    <div class="scroll-chips">
+      ${strata.map(s => `<button class="filter-chip ${state.filterStrata===s?'active':''}" onclick="state.filterStrata='${s}';render()">${s==='all'?'All Strata':s}</button>`).join('')}
+    </div>
+    <div class="scroll-chips">
+      ${successions.map(s => `<button class="filter-chip ${state.filterSuccession===s?'active':''}" onclick="state.filterSuccession='${s}';render()">${s==='all'?'All Succession':s}</button>`).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">${species.length} species</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Strata</th><th>Succession</th><th>Pruning</th><th></th>
+        </tr></thead>
+        <tbody>
+          ${species.map(s => `<tr>
+            <td><div>${s.name}</div><div style="font-size:10px;color:var(--text3);font-style:italic">${s.botanical}</div></td>
+            <td><span class="tag tag-accent">${s.strata}</span></td>
+            <td><span class="tag">${s.succession}</span></td>
+            <td style="font-size:11px;color:var(--text2)">${s.pruning||'—'}</td>
+            <td><div class="tbl-actions">
+              <button class="tbl-btn" onclick="showModal('edit-species','${s.id}')">Edit</button>
+              <button class="tbl-btn" style="color:var(--danger)" onclick="deleteSpecies('${s.id}')">Del</button>
+            </div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderCalendar() {
+  const sites = DB.sites();
+  const species = DB.species();
+  // Collect all species used across all sites
+  const usedIds = new Set();
+  sites.forEach(site => {
+    (site.rows||[]).forEach(r => (r.species||[]).forEach(id => usedIds.add(id)));
+    (site.nests||[]).forEach(n => (n.species||[]).forEach(id => usedIds.add(id)));
+  });
+  // If no sites/species assigned, show all library species
+  const activeSpecies = usedIds.size > 0
+    ? species.filter(s => usedIds.has(s.id))
+    : species;
+
+  const now = new Date();
+  const currentMonth = now.getMonth(); // 0-indexed
+
+  // Build 12-month calendar starting from current month
+  let html = '<div class="section">';
+  if (usedIds.size === 0) {
+    html += `<div style="font-size:11px;color:var(--text3);margin-bottom:16px">Showing full library — assign species to sites to filter by project.</div>`;
+  }
+
+  for (let i = 0; i < 12; i++) {
+    const mi = (currentMonth + i) % 12;
+    const tasks = activeSpecies.filter(s => {
+      const months = PRUNE_MONTHS[s.pruning] || [];
+      return months.includes(mi + 1);
+    });
+    html += `<div class="cal-month">
+      <div class="cal-month-title">${MONTH_NAMES[mi]}</div>
+      ${tasks.length ? tasks.map(s => `
+        <div class="cal-item">
+          <div class="cal-item-plant">${s.name}</div>
+          <div class="cal-item-meta">${s.pruning} · ${s.strata}</div>
+        </div>`).join('') : `<div class="cal-empty">Nothing scheduled</div>`}
+    </div>`;
+  }
+  return html + '</div>';
+}
+
+function renderSettings() {
+  const settings = DB.settings();
+  return `<div class="section">
+    <div class="section-title">Dimensions</div>
+    <div class="form-group">
+      <label class="form-label">Row Width (m)</label>
+      <input class="form-input" type="number" step="0.1" value="${settings.rowWidth}" onchange="updateSetting('rowWidth',parseFloat(this.value))">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Row Spacing (m)</label>
+      <input class="form-input" type="number" step="0.5" value="${settings.rowSpacing}" onchange="updateSetting('rowSpacing',parseFloat(this.value))">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nest Diameter (m)</label>
+      <input class="form-input" type="number" step="0.5" value="${settings.nestDiameter}" onchange="updateSetting('nestDiameter',parseFloat(this.value))">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nest Spacing (m)</label>
+      <input class="form-input" type="number" step="0.5" value="${settings.nestSpacing}" onchange="updateSetting('nestSpacing',parseFloat(this.value))">
+    </div>
+    <hr class="divider">
+    <div class="section-title">Climate Presets</div>
+    ${settings.climatePresets.map((p,i) => `
+      <div class="card">
+        <div class="card-title">${p.name}</div>
+        <div class="card-meta">Winter ${p.winterLow}°C · Summer ${p.summerHigh}°C · ${p.rainfall}mm · Last frost ${p.lastFrost}</div>
+        <div style="margin-top:8px;display:flex;gap:6px">
+          <button class="tbl-btn" onclick="showModal('edit-preset',${i})">Edit</button>
+          ${i >= 5 ? `<button class="tbl-btn" style="color:var(--danger)" onclick="deletePreset(${i})">Del</button>` : ''}
+        </div>
+      </div>`).join('')}
+    <button class="add-btn" onclick="showModal('new-preset')">+ Add Climate Preset</button>
+    <hr class="divider">
+    <div class="section-title">Data</div>
+    <button class="btn btn-secondary" style="width:100%;margin-bottom:8px" onclick="exportData()">Export Backup</button>
+    <label class="btn btn-secondary" style="width:100%;display:block;text-align:center;cursor:pointer">Import Backup<input type="file" accept=".json" style="display:none" onchange="importData(event)"></label>
+  </div>`;
+}
+
+// ===================== MODALS =====================
+function showModal(type, ...args) {
+  closeModal();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
+
+  let html = '';
+  const settings = DB.settings();
+
+  if (type === 'new-site' || type === 'edit-site') {
+    const isEdit = type === 'edit-site';
+    const site = isEdit ? DB.sites().find(s => s.id === args[0]) : {};
+    const presets = settings.climatePresets;
+    html = `<div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">${isEdit ? 'Edit Site' : 'New Site'}</div>
+      <div class="form-group"><label class="form-label">Site Name *</label><input class="form-input" id="m-name" value="${site.name||''}"></div>
+      <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="m-location" value="${site.location||''}"></div>
+      <div class="form-group"><label class="form-label">Plot Size</label><input class="form-input" id="m-plotsize" value="${site.plotSize||''}" placeholder="e.g. 0.5ha"></div>
+      <div class="form-group"><label class="form-label">Start Date</label><input class="form-input" id="m-startdate" type="month" value="${site.startDate||''}"></div>
+      <div class="form-group"><label class="form-label">Climate Profile</label>
+        <select class="form-select" id="m-climate" onchange="onClimateChange(this)">
+          ${presets.map(p => `<option value="${p.id}" ${site.climateId===p.id?'selected':''}>${p.name}</option>`).join('')}
+        </select>
+      </div>
+      <div id="m-climate-custom" class="${site.climateId==='custom'?'':'hidden'}">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Winter Low (°C)</label><input class="form-input" id="m-winter" type="number" value="${site.winterLow||0}"></div>
+          <div class="form-group"><label class="form-label">Summer High (°C)</label><input class="form-input" id="m-summer" type="number" value="${site.summerHigh||25}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Rainfall (mm/yr)</label><input class="form-input" id="m-rain" type="number" value="${site.rainfall||800}"></div>
+          <div class="form-group"><label class="form-label">Last Frost Month</label><input class="form-input" id="m-frost" value="${site.lastFrost||'Mar'}"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Rainfall Pattern</label>
+          <select class="form-select" id="m-rainpattern">
+            <option value="year-round" ${site.rainfallPattern==='year-round'?'selected':''}>Year-round</option>
+            <option value="spring-summer" ${site.rainfallPattern==='spring-summer'?'selected':''}>Spring-Summer</option>
+            <option value="winter-wet" ${site.rainfallPattern==='winter-wet'?'selected':''}>Winter Wet / Summer Dry</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="m-notes">${site.notes||''}</textarea></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSite('${isEdit?site.id:''}')">Save</button>
+      </div>
+    </div>`;
+  }
+
+  else if (type === 'new-row' || type === 'edit-row') {
+    const siteId = args[0], rowId = args[1];
+    const site = DB.sites().find(s => s.id === siteId);
+    const row = rowId ? (site.rows||[]).find(r => r.id === rowId) : {};
+    html = `<div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">${rowId ? 'Edit Row' : 'New Row'}</div>
+      <div class="form-group"><label class="form-label">Row Name *</label><input class="form-input" id="m-name" value="${row.name||''}" placeholder="e.g. North row, Support line 1"></div>
+      <div class="form-group"><label class="form-label">Length (m)</label><input class="form-input" id="m-length" type="number" step="0.5" value="${row.length||''}"></div>
+      <div class="form-group"><label class="form-label">Type</label>
+        <select class="form-select" id="m-type">
+          <option value="Tree line" ${row.type==='Tree line'?'selected':''}>Tree line</option>
+          <option value="Support line" ${row.type==='Support line'?'selected':''}>Support line</option>
+          <option value="Mixed" ${row.type==='Mixed'?'selected':''}>Mixed</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="m-notes">${row.notes||''}</textarea></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveRow('${siteId}','${rowId||''}')">Save</button>
+      </div>
+    </div>`;
+  }
+
+  else if (type === 'new-nest' || type === 'edit-nest') {
+    const siteId = args[0], nestId = args[1];
+    const site = DB.sites().find(s => s.id === siteId);
+    const nest = nestId ? (site.nests||[]).find(n => n.id === nestId) : {};
+    html = `<div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">${nestId ? 'Edit Nest' : 'New Nest'}</div>
+      <div class="form-group"><label class="form-label">Nest Name *</label><input class="form-input" id="m-name" value="${nest.name||''}" placeholder="e.g. Central nest, Entrance nest"></div>
+      <div class="form-group"><label class="form-label">Type</label>
+        <select class="form-select" id="m-type">
+          <option value="Mixed" ${nest.type==='Mixed'?'selected':''}>Mixed</option>
+          <option value="Fruit" ${nest.type==='Fruit'?'selected':''}>Fruit</option>
+          <option value="Support" ${nest.type==='Support'?'selected':''}>Support</option>
+          <option value="Medicinal" ${nest.type==='Medicinal'?'selected':''}>Medicinal</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="m-notes">${nest.notes||''}</textarea></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveNest('${siteId}','${nestId||''}')">Save</button>
+      </div>
+    </div>`;
+  }
+
+  else if (type === 'new-species' || type === 'edit-species') {
+    const sp = type === 'edit-species' ? DB.species().find(s => s.id === args[0]) : {};
+    const strata = ['Emergent','High','Medium','Low'];
+    const successions = ['Accumulation','Transitionary','Abundance','Transitionary / Accumulation','Transitionary / Abundance','Accumulation / Abundance'];
+    const lifecycles = ['Climax','Secondary','Placenta'];
+    html = `<div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">${sp.id ? 'Edit Species' : 'New Species'}</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Common Name *</label><input class="form-input" id="m-name" value="${sp.name||''}"></div>
+        <div class="form-group"><label class="form-label">Botanical Name</label><input class="form-input" id="m-botanical" value="${sp.botanical||''}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Strata</label>
+          <select class="form-select" id="m-strata">${strata.map(s=>`<option ${sp.strata===s?'selected':''}>${s}</option>`).join('')}</select>
+        </div>
+        <div class="form-group"><label class="form-label">Lifecycle</label>
+          <select class="form-select" id="m-lifecycle">${lifecycles.map(l=>`<option ${sp.lifecycle===l?'selected':''}>${l}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Succession</label>
+        <select class="form-select" id="m-succession">${successions.map(s=>`<option ${sp.succession===s?'selected':''}>${s}</option>`).join('')}</select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Min Spacing (m)</label><input class="form-input" id="m-spacing" type="number" step="0.1" value="${sp.spacing||''}"></div>
+        <div class="form-group"><label class="form-label">Fruiting Period</label><input class="form-input" id="m-fruiting" value="${sp.fruiting||''}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Pruning</label><input class="form-input" id="m-pruning" value="${sp.pruning||''}"></div>
+        <div class="form-group"><label class="form-label">Propagation</label><input class="form-input" id="m-propagation" value="${sp.propagation||''}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Winter Low Tolerance (°C)</label><input class="form-input" id="m-winterlow" type="number" value="${sp.winterLow!==undefined?sp.winterLow:''}"></div>
+        <div class="form-group"><label class="form-label">Min Summer Temp (°C)</label><input class="form-input" id="m-summerlow" type="number" value="${sp.summerLow!==undefined?sp.summerLow:''}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="m-notes">${sp.notes||''}</textarea></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveSpecies('${sp.id||''}')">Save</button>
+      </div>
+    </div>`;
+  }
+
+  else if (type === 'species-detail') {
+    const sp = DB.species().find(s => s.id === args[0]);
+    if (!sp) return;
+    html = `<div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">${sp.name}</div>
+      <div style="font-style:italic;color:var(--text3);font-size:12px;margin-bottom:12px">${sp.botanical}</div>
+      <div class="detail-row"><span class="detail-label">Strata</span><span class="detail-value"><span class="tag tag-accent">${sp.strata}</span></span></div>
+      <div class="detail-row"><span class="detail-label">Succession</span><span class="detail-value">${sp.succession}</span></div>
+      <div class="detail-row"><span class="detail-label">Lifecycle</span><span class="detail-value">${sp.lifecycle}</span></div>
+      <div class="detail-row"><span class="detail-label">Min Spacing</span><span class="detail-value">${sp.spacing}m</span></div>
+      <div class="detail-row"><span class="detail-label">Fruiting</span><span class="detail-value">${sp.fruiting||'—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Pruning</span><span class="detail-value">${sp.pruning||'—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Propagation</span><span class="detail-value">${sp.propagation||'—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Winter Low</span><span class="detail-value">${sp.winterLow!==undefined?sp.winterLow+'°C':'—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Min Summer</span><span class="detail-value">${sp.summerLow!==undefined?sp.summerLow+'°C':'—'}</span></div>
+      ${sp.notes?`<div style="margin-top:12px;font-size:12px;color:var(--text2)">${sp.notes}</div>`:''}
+      <div class="btn-row"><button class="btn btn-secondary" style="flex:1" onclick="closeModal()">Close</button></div>
+    </div>`;
+  }
+
+  else if (type === 'pick-species') {
+    const target = args[0], targetId = args[1], siteId = args[2];
+    const allSpecies = DB.species();
+    const site = DB.sites().find(s => s.id === siteId);
+    const obj = target === 'row'
+      ? (site.rows||[]).find(r => r.id === targetId)
+      : (site.nests||[]).find(n => n.id === targetId);
+    const selected = new Set(obj ? (obj.species||[]) : []);
+
+    // Filter by site climate
+    let filtered = allSpecies;
+    if (site.winterLow !== undefined) {
+      filtered = allSpecies.filter(s => s.winterLow === undefined || s.winterLow <= site.winterLow);
+    }
+
+    html = `<div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Add Species</div>
+      <input class="form-input" placeholder="Search..." oninput="filterPickList(this.value)" style="margin-bottom:10px">
+      ${site.winterLow!==undefined?`<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Filtered for ${site.climateName} (${site.winterLow}°C winter low)</div>`:''}
+      <div class="species-pick-list" id="pick-list">
+        ${filtered.map(s => `
+          <label class="species-pick-item">
+            <input type="checkbox" value="${s.id}" ${selected.has(s.id)?'checked':''}>
+            <div>
+              <div class="species-pick-name">${s.name}</div>
+              <div class="species-pick-meta">${s.strata} · ${s.succession}</div>
+            </div>
+          </label>`).join('')}
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="savePickedSpecies('${target}','${targetId}','${siteId}')">Save</button>
+      </div>
+    </div>`;
+  }
+
+  else if (type === 'new-preset' || type === 'edit-preset') {
+    const idx = args[0];
+    const preset = idx !== undefined ? settings.climatePresets[idx] : {};
+    html = `<div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">${idx !== undefined ? 'Edit Preset' : 'New Climate Preset'}</div>
+      <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="m-name" value="${preset.name||''}"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Winter Low (°C)</label><input class="form-input" id="m-winter" type="number" value="${preset.winterLow||0}"></div>
+        <div class="form-group"><label class="form-label">Summer High (°C)</label><input class="form-input" id="m-summer" type="number" value="${preset.summerHigh||25}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Rainfall (mm/yr)</label><input class="form-input" id="m-rain" type="number" value="${preset.rainfall||800}"></div>
+        <div class="form-group"><label class="form-label">Last Frost</label><input class="form-input" id="m-frost" value="${preset.lastFrost||'Mar'}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Rainfall Pattern</label>
+        <select class="form-select" id="m-rainpattern">
+          <option value="year-round" ${preset.rainfallPattern==='year-round'?'selected':''}>Year-round</option>
+          <option value="spring-summer" ${preset.rainfallPattern==='spring-summer'?'selected':''}>Spring-Summer</option>
+          <option value="winter-wet" ${preset.rainfallPattern==='winter-wet'?'selected':''}>Winter Wet / Summer Dry</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="savePreset(${idx !== undefined ? idx : -1})">Save</button>
+      </div>
+    </div>`;
+  }
+
+  overlay.innerHTML = html;
+  document.body.appendChild(overlay);
+}
+
+function closeModal() {
+  const m = document.getElementById('modal-overlay');
+  if (m) m.remove();
+}
+
+// ===================== ACTIONS =====================
+function openSite(id) { navigate('sites','site',{currentSite:id}); }
+function openRow(siteId, rowId) { navigate('sites','row',{currentSite:siteId,currentRow:rowId}); }
+function openNest(siteId, nestId) { navigate('sites','nest',{currentSite:siteId,currentNest:nestId}); }
+
+function saveSite(id) {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) return alert('Site name is required');
+  const climateId = document.getElementById('m-climate').value;
+  const settings = DB.settings();
+  const preset = settings.climatePresets.find(p => p.id === climateId);
+  let climateData = preset ? { winterLow: preset.winterLow, summerHigh: preset.summerHigh, rainfall: preset.rainfall, lastFrost: preset.lastFrost, rainfallPattern: preset.rainfallPattern } : {};
+  if (climateId === 'custom') {
+    climateData = {
+      winterLow: parseFloat(document.getElementById('m-winter').value),
+      summerHigh: parseFloat(document.getElementById('m-summer').value),
+      rainfall: parseInt(document.getElementById('m-rain').value),
+      lastFrost: document.getElementById('m-frost').value,
+      rainfallPattern: document.getElementById('m-rainpattern').value,
+    };
+  }
+  const sites = DB.sites();
+  const existing = id ? sites.find(s => s.id === id) : null;
+  const site = {
+    ...(existing||{}),
+    id: id || uid(),
+    name,
+    location: document.getElementById('m-location').value,
+    plotSize: document.getElementById('m-plotsize').value,
+    startDate: document.getElementById('m-startdate').value,
+    climateId,
+    climateName: preset ? preset.name : 'Custom',
+    notes: document.getElementById('m-notes').value,
+    ...climateData,
+    rows: existing ? existing.rows : [],
+    nests: existing ? existing.nests : [],
+    mapElements: existing ? existing.mapElements : [],
+    mapImage: existing ? existing.mapImage : null,
+  };
+  if (id) { const i = sites.findIndex(s=>s.id===id); sites[i]=site; } else { sites.push(site); }
+  DB.saveSites(sites);
+  closeModal();
+  if (id) navigate('sites','site',{currentSite:id}); else navigate('sites');
+}
+
+function saveRow(siteId, rowId) {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) return alert('Row name is required');
+  const sites = DB.sites();
+  const site = sites.find(s => s.id === siteId);
+  if (!site.rows) site.rows = [];
+  const row = { id: rowId||uid(), name, length: parseFloat(document.getElementById('m-length').value)||null, type: document.getElementById('m-type').value, notes: document.getElementById('m-notes').value, species: rowId ? (site.rows.find(r=>r.id===rowId)||{}).species||[] : [] };
+  if (rowId) { const i = site.rows.findIndex(r=>r.id===rowId); site.rows[i]=row; } else { site.rows.push(row); }
+  DB.saveSites(sites);
+  closeModal();
+  navigate('sites','site',{currentSite:siteId});
+}
+
+function saveNest(siteId, nestId) {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) return alert('Nest name is required');
+  const sites = DB.sites();
+  const site = sites.find(s => s.id === siteId);
+  if (!site.nests) site.nests = [];
+  const nest = { id: nestId||uid(), name, type: document.getElementById('m-type').value, notes: document.getElementById('m-notes').value, species: nestId ? (site.nests.find(n=>n.id===nestId)||{}).species||[] : [] };
+  if (nestId) { const i = site.nests.findIndex(n=>n.id===nestId); site.nests[i]=nest; } else { site.nests.push(nest); }
+  DB.saveSites(sites);
+  closeModal();
+  navigate('sites','site',{currentSite:siteId});
+}
+
+function deleteRow(siteId, rowId) {
+  if (!confirm('Delete this row?')) return;
+  const sites = DB.sites();
+  const site = sites.find(s=>s.id===siteId);
+  site.rows = (site.rows||[]).filter(r=>r.id!==rowId);
+  DB.saveSites(sites);
+  navigate('sites','site',{currentSite:siteId});
+}
+
+function deleteNest(siteId, nestId) {
+  if (!confirm('Delete this nest?')) return;
+  const sites = DB.sites();
+  const site = sites.find(s=>s.id===siteId);
+  site.nests = (site.nests||[]).filter(n=>n.id!==nestId);
+  DB.saveSites(sites);
+  navigate('sites','site',{currentSite:siteId});
+}
+
+function saveSpecies(id) {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) return alert('Name is required');
+  const all = DB.species();
+  const sp = {
+    id: id||uid(), name,
+    botanical: document.getElementById('m-botanical').value,
+    strata: document.getElementById('m-strata').value,
+    lifecycle: document.getElementById('m-lifecycle').value,
+    succession: document.getElementById('m-succession').value,
+    spacing: parseFloat(document.getElementById('m-spacing').value)||0,
+    fruiting: document.getElementById('m-fruiting').value,
+    pruning: document.getElementById('m-pruning').value,
+    propagation: document.getElementById('m-propagation').value,
+    winterLow: parseFloat(document.getElementById('m-winterlow').value),
+    summerLow: parseFloat(document.getElementById('m-summerlow').value),
+    notes: document.getElementById('m-notes').value,
+  };
+  if (id) { const i = all.findIndex(s=>s.id===id); all[i]=sp; } else { all.push(sp); }
+  DB.saveSpecies(all);
+  closeModal();
+  render();
+}
+
+function deleteSpecies(id) {
+  if (!confirm('Delete this species?')) return;
+  DB.saveSpecies(DB.species().filter(s=>s.id!==id));
+  render();
+}
+
+function savePickedSpecies(target, targetId, siteId) {
+  const checked = [...document.querySelectorAll('#pick-list input:checked')].map(i=>i.value);
+  const sites = DB.sites();
+  const site = sites.find(s=>s.id===siteId);
+  if (target==='row') { const r = site.rows.find(r=>r.id===targetId); if(r) r.species=checked; }
+  else { const n = site.nests.find(n=>n.id===targetId); if(n) n.species=checked; }
+  DB.saveSites(sites);
+  closeModal();
+  if (target==='row') navigate('sites','row',{currentSite:siteId,currentRow:targetId});
+  else navigate('sites','nest',{currentSite:siteId,currentNest:targetId});
+}
+
+function filterPickList(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#pick-list .species-pick-item').forEach(el => {
+    const name = el.querySelector('.species-pick-name').textContent.toLowerCase();
+    el.style.display = name.includes(q) ? '' : 'none';
+  });
+}
+
+function savePreset(idx) {
+  const settings = DB.settings();
+  const preset = {
+    id: idx >= 0 ? settings.climatePresets[idx].id : uid(),
+    name: document.getElementById('m-name').value,
+    winterLow: parseFloat(document.getElementById('m-winter').value),
+    summerHigh: parseFloat(document.getElementById('m-summer').value),
+    rainfall: parseInt(document.getElementById('m-rain').value),
+    lastFrost: document.getElementById('m-frost').value,
+    rainfallPattern: document.getElementById('m-rainpattern').value,
+  };
+  if (idx >= 0) settings.climatePresets[idx] = preset;
+  else settings.climatePresets.push(preset);
+  DB.saveSettings(settings);
+  closeModal();
+  render();
+}
+
+function deletePreset(idx) {
+  if (!confirm('Delete this preset?')) return;
+  const settings = DB.settings();
+  settings.climatePresets.splice(idx, 1);
+  DB.saveSettings(settings);
+  render();
+}
+
+function updateSetting(key, val) {
+  const s = DB.settings();
+  s[key] = val;
+  DB.saveSettings(s);
+}
+
+function onClimateChange(sel) {
+  const custom = document.getElementById('m-climate-custom');
+  if (custom) custom.classList.toggle('hidden', sel.value !== 'custom');
+  if (sel.value !== 'custom') {
+    const preset = DB.settings().climatePresets.find(p=>p.id===sel.value);
+    if (preset) {
+      const w = document.getElementById('m-winter'), su = document.getElementById('m-summer');
+      const r = document.getElementById('m-rain'), f = document.getElementById('m-frost');
+      if(w) w.value=preset.winterLow;
+      if(su) su.value=preset.summerHigh;
+      if(r) r.value=preset.rainfall;
+      if(f) f.value=preset.lastFrost;
+    }
+  }
+}
+
+function showSiteTab(btn, tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  ['info','map','rows','nests'].forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    if (el) el.classList.toggle('hidden', t !== tab);
+  });
+  if (tab === 'map') initMap();
+}
+
+// ===================== MAP =====================
+let mapCtx, mapCanvas, mapW, mapH;
+let mapImg = null;
+let mapElements = [];
+let currentDrawing = null;
+let mapSiteId = null;
+
+function initMap() {
+  mapCanvas = document.getElementById('map-canvas');
+  if (!mapCanvas) return;
+  mapCtx = mapCanvas.getContext('2d');
+  mapW = mapCanvas.offsetWidth;
+  mapCanvas.width = mapW;
+  mapH = 320;
+  const site = DB.sites().find(s => s.id === state.currentSite);
+  mapElements = site ? (site.mapElements || []) : [];
+  mapSiteId = state.currentSite;
+  if (site && site.mapImageData) {
+    const img = new Image();
+    img.onload = () => { mapImg = img; drawMap(); };
+    img.src = site.mapImageData;
+  } else { mapImg = null; drawMap(); }
+
+  mapCanvas.onpointerdown = mapPointerDown;
+  mapCanvas.onpointermove = mapPointerMove;
+  mapCanvas.onpointerup = mapPointerUp;
+  mapCanvas.ondblclick = mapDblClick;
+}
+
+function getPos(e) {
+  const rect = mapCanvas.getBoundingClientRect();
+  const scaleX = mapCanvas.width / rect.width;
+  const scaleY = mapCanvas.height / rect.height;
+  return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+}
+
+function mapPointerDown(e) {
+  e.preventDefault();
+  if (state.mapTool === 'none') return;
+  const pos = getPos(e);
+  if (state.mapTool === 'nest') {
+    mapElements.push({ type: 'nest', x: pos.x, y: pos.y, r: 20 });
+    saveMapElements();
+    drawMap();
+  } else if (state.mapTool === 'row') {
+    if (!currentDrawing) {
+      currentDrawing = { type: 'row', points: [pos] };
+    } else {
+      currentDrawing.points.push(pos);
+      drawMap();
+    }
+  }
+}
+
+function mapPointerMove(e) {
+  if (state.mapTool !== 'row' || !currentDrawing) return;
+  const pos = getPos(e);
+  drawMap();
+  mapCtx.save();
+  mapCtx.strokeStyle = '#7ab648';
+  mapCtx.lineWidth = 2;
+  mapCtx.setLineDash([4,4]);
+  mapCtx.beginPath();
+  const last = currentDrawing.points[currentDrawing.points.length-1];
+  mapCtx.moveTo(last.x, last.y);
+  mapCtx.lineTo(pos.x, pos.y);
+  mapCtx.stroke();
+  mapCtx.restore();
+}
+
+function mapPointerUp(e) {}
+
+function mapDblClick(e) {
+  if (state.mapTool === 'row' && currentDrawing && currentDrawing.points.length >= 2) {
+    mapElements.push({ ...currentDrawing });
+    currentDrawing = null;
+    saveMapElements();
+    drawMap();
+  }
+}
+
+function drawMap() {
+  if (!mapCtx) return;
+  mapCtx.clearRect(0, 0, mapW, mapH);
+  mapCtx.fillStyle = '#1e301e';
+  mapCtx.fillRect(0, 0, mapW, mapH);
+  if (mapImg) mapCtx.drawImage(mapImg, 0, 0, mapW, mapH);
+  mapElements.forEach(el => {
+    if (el.type === 'nest') {
+      mapCtx.save();
+      mapCtx.strokeStyle = '#7ab648';
+      mapCtx.fillStyle = 'rgba(74,143,42,0.2)';
+      mapCtx.lineWidth = 2;
+      mapCtx.beginPath();
+      mapCtx.arc(el.x, el.y, el.r, 0, Math.PI*2);
+      mapCtx.fill(); mapCtx.stroke();
+      mapCtx.restore();
+    } else if (el.type === 'row' && el.points && el.points.length >= 2) {
+      mapCtx.save();
+      mapCtx.strokeStyle = '#c8a84b';
+      mapCtx.lineWidth = 3;
+      mapCtx.lineCap = 'round';
+      mapCtx.lineJoin = 'round';
+      mapCtx.beginPath();
+      mapCtx.moveTo(el.points[0].x, el.points[0].y);
+      el.points.slice(1).forEach(p => mapCtx.lineTo(p.x, p.y));
+      mapCtx.stroke();
+      // dots
+      el.points.forEach(p => {
+        mapCtx.fillStyle = '#c8a84b';
+        mapCtx.beginPath();
+        mapCtx.arc(p.x, p.y, 3, 0, Math.PI*2);
+        mapCtx.fill();
+      });
+      mapCtx.restore();
+    }
+  });
+}
+
+function saveMapElements() {
+  const sites = DB.sites();
+  const site = sites.find(s => s.id === mapSiteId);
+  if (site) { site.mapElements = mapElements; DB.saveSites(sites); }
+}
+
+function setMapTool(tool) {
+  state.mapTool = tool;
+  currentDrawing = null;
+  document.querySelectorAll('.tool-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim().startsWith(tool==='row'?'✏️':tool==='nest'?'⭕':'👆'));
+  });
+}
+
+function loadMapImage(e, siteId) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const sites = DB.sites();
+    const site = sites.find(s=>s.id===siteId);
+    if (site) { site.mapImageData = ev.target.result; DB.saveSites(sites); }
+    const img = new Image();
+    img.onload = () => { mapImg = img; drawMap(); };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearMapElements(siteId) {
+  if (!confirm('Clear all map elements?')) return;
+  mapElements = [];
+  const sites = DB.sites();
+  const site = sites.find(s=>s.id===siteId);
+  if (site) { site.mapElements = []; DB.saveSites(sites); }
+  drawMap();
+}
+
+// ===================== DATA EXPORT/IMPORT =====================
+function exportData() {
+  const data = { sites: DB.sites(), species: DB.species(), settings: DB.settings(), exported: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'forest-tool-backup.json';
+  a.click();
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.sites) DB.saveSites(data.sites);
+      if (data.species) DB.saveSpecies(data.species);
+      if (data.settings) DB.saveSettings(data.settings);
+      alert('Import successful');
+      render();
+    } catch { alert('Import failed — invalid file'); }
+  };
+  reader.readAsText(file);
+}
+
+// ===================== HANDLERS =====================
+function attachHandlers() {
+  document.querySelectorAll('#nav button').forEach(btn => {
+    btn.onclick = () => {
+      state.subView = null;
+      navigate(btn.dataset.view);
+    };
+  });
+}
+
+// ===================== INIT =====================
+render();
+</script>
+</body>
+</html>
