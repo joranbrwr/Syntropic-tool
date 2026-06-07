@@ -5,26 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#1a2e1a">
+<meta name="theme-color" content="#f5f5f0">
 <title>Forest Tool</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f1f0f;
-    --bg2: #162316;
-    --bg3: #1e301e;
-    --card: #1a2e1a;
-    --border: #2d442d;
-    --accent: #7ab648;
-    --accent2: #4a8f2a;
-    --gold: #c8a84b;
-    --text: #d4e8c2;
-    --text2: #8aab72;
-    --text3: #546f45;
-    --danger: #c04a4a;
+    --bg: #f5f5f0;
+    --bg2: #ffffff;
+    --bg3: #eeede8;
+    --card: #ffffff;
+    --border: #dddbd4;
+    --accent: #2d6a1f;
+    --accent2: #3a8228;
+    --gold: #7a5c10;
+    --text: #1a1a16;
+    --text2: #3d5c30;
+    --text3: #8a9a80;
+    --danger: #b83a3a;
     --radius: 10px;
-    --font-head: 'Playfair Display', Georgia, serif;
-    --font-mono: 'DM Mono', monospace;
+    --font-head: 'Lora', Georgia, serif;
+    --font-mono: 'Nunito', sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-mono); font-size: 14px; overflow: hidden; }
@@ -113,7 +113,7 @@
   .cal-empty { color: var(--text3); font-size: 12px; font-style: italic; padding: 8px 2px; }
 
   /* MODAL */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; display: flex; align-items: flex-end; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; display: flex; align-items: flex-end; }
   .modal { background: var(--bg2); border-radius: 16px 16px 0 0; border-top: 1px solid var(--border); padding: 20px 16px 32px; width: 100%; max-height: 90vh; overflow-y: auto; }
   .modal-title { font-family: var(--font-head); font-size: 17px; color: var(--accent); margin-bottom: 16px; }
   .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
@@ -1108,7 +1108,7 @@ function mapDblClick(e) {
 function drawMap() {
   if (!mapCtx) return;
   mapCtx.clearRect(0, 0, mapW, mapH);
-  mapCtx.fillStyle = '#1e301e';
+  mapCtx.fillStyle = '#eeede8';
   mapCtx.fillRect(0, 0, mapW, mapH);
   if (mapImg) mapCtx.drawImage(mapImg, 0, 0, mapW, mapH);
   mapElements.forEach(el => {
